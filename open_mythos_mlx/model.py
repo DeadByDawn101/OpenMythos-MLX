@@ -97,14 +97,23 @@ def apply_rope(x: mx.array, cos_freqs: mx.array, sin_freqs: mx.array) -> mx.arra
 def loop_index_embedding(h: mx.array, t: int, embed_dim: int) -> mx.array:
     """Add sinusoidal loop-index signal to first embed_dim channels."""
     D = embed_dim
+    half = D // 2
     pos = mx.array([t], dtype=mx.float32)
-    freqs = 1.0 / (10000.0 ** (mx.arange(0, D, 2, dtype=mx.float32) / D))
+    freqs = 1.0 / (10000.0 ** (mx.arange(0, half, dtype=mx.float32) / half))
     angles = pos * freqs
+    sin_vals = mx.sin(angles)
+    cos_vals = mx.cos(angles)
+    # Build signal: [sin0, cos0, sin1, cos1, ...]
     signal = mx.zeros((D,))
-    signal = signal.at[::2].add(mx.sin(angles))
-    signal = signal.at[1::2].add(mx.cos(angles))
-    h = h.at[..., :D].add(signal)
-    return h
+    for i in range(min(half, len(sin_vals))):
+        signal = signal * 1.0  # force eval
+    # Simple approach: concatenate sin and cos
+    signal = mx.concatenate([sin_vals, cos_vals])[:D]
+    # Pad to match h's last dim and add
+    if h.shape[-1] > D:
+        pad = mx.zeros((h.shape[-1] - D,))
+        signal = mx.concatenate([signal, pad])
+    return h + signal
 
 
 # ---------------------------------------------------------------------------
@@ -273,7 +282,7 @@ class MoEFFN(nn.Module):
 
         self.router = nn.Linear(cfg.dim, cfg.n_experts, bias=False)
         self.experts = [Expert(cfg.dim, cfg.expert_dim) for _ in range(cfg.n_experts)]
-        self.shared = [Expert(cfg.dim, cfg.expert_dim) for _ in range(cfg.n_shared)]
+        self.shared = [Expert(cfg.dim, cfg.expert_dim) for _ in range(self.n_shared)]
 
     def __call__(self, x):
         B, T, D = x.shape
