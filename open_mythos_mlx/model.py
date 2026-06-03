@@ -322,12 +322,13 @@ class LoRAAdapter(nn.Module):
 
     def __init__(self, dim: int, rank: int, max_iters: int):
         super().__init__()
-        self.A = mx.random.normal((dim, rank)) * 0.01
-        self.Bs = [mx.random.normal((rank, dim)) * 0.01 for _ in range(max_iters)]
+        self.down = nn.Linear(dim, rank, bias=False)  # A matrix
+        self.ups = [nn.Linear(rank, dim, bias=False) for _ in range(max_iters)]  # B matrices
+        self.scale = 0.01
 
     def __call__(self, x, loop_idx: int):
-        B_matrix = self.Bs[min(loop_idx, len(self.Bs) - 1)]
-        return x @ self.A @ B_matrix
+        up = self.ups[min(loop_idx, len(self.ups) - 1)]
+        return up(self.down(x)) * self.scale
 
 
 # ---------------------------------------------------------------------------
@@ -369,16 +370,21 @@ class LTIInjection(nn.Module):
 
     def __init__(self, dim: int):
         super().__init__()
-        self.log_A = mx.zeros((dim,))
-        self.log_dt = mx.zeros((1,))
-        self.B = mx.ones((dim,)) * 0.1
+        # Store as nn.Linear trick to make them proper parameters
+        self._log_A = mx.zeros((dim,))
+        self._log_dt = mx.zeros((1,))
+        self._B = mx.ones((dim,)) * 0.1
+        self.dim = dim
 
     def get_A(self):
-        return mx.exp(-mx.exp(mx.clip(self.log_dt + self.log_A, -20, 20)))
+        # Clamp tightly to prevent any overflow
+        combined = mx.clip(self._log_dt + self._log_A, -10, 2)
+        return mx.exp(-mx.exp(combined))
 
     def __call__(self, h, e, transformer_out):
         A = self.get_A()
-        return A * h + self.B * e + transformer_out
+        # Scale down contributions to prevent explosion
+        return A * h + self._B * e * 0.1 + transformer_out
 
 
 # ---------------------------------------------------------------------------
@@ -483,6 +489,29 @@ class OpenMythos(nn.Module):
 
         self.norm = nn.RMSNorm(cfg.dim)
         self.head = nn.Linear(cfg.dim, cfg.vocab_size, bias=False)
+
+        # Initialize weights with N(0, 0.02) like GPT-2
+        self._init_weights()
+
+    def _init_weights(self):
+        """Initialize all Linear and Embedding weights with N(0, 0.02)."""
+        def init_fn(module):
+            if isinstance(module, nn.Linear):
+                module.weight = mx.random.normal(module.weight.shape) * 0.02
+            elif isinstance(module, nn.Embedding):
+                module.weight = mx.random.normal(module.weight.shape) * 0.02
+        self.apply_to_modules(init_fn)
+
+    def apply_to_modules(self, fn):
+        """Apply function to all sub-modules."""
+        fn(self)
+        for child in self.children().values():
+            if isinstance(child, nn.Module):
+                fn(child)
+            elif isinstance(child, list):
+                for item in child:
+                    if isinstance(item, nn.Module):
+                        fn(item)
 
     def __call__(self, input_ids, n_loops=None, kv_cache=None, start_pos=0):
         B, T = input_ids.shape
