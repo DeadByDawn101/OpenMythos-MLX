@@ -1,7 +1,7 @@
 # Universal Reasoning Augmentation via Depth-Extrapolated Distillation
 ## OpenMythos: Reasoning-as-a-Service for Any Language Model
 
-**Authors:** Gabriel [Last Name], RavenX LLC (@DeadByDawn101)
+**Authors:** Gabe Garcia , RavenX LLC (@DeadByDawn101)
 
 **Status:** DRAFT — June 4, 2026
 
