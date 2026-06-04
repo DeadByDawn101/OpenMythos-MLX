@@ -1,6 +1,6 @@
 # RDT-Distilled Security Reasoning in MoE Transformers
 
-**Authors:** Gabriel [Last Name], RavenX LLC (@DeadByDawn101)
+**Authors:** Gabe Garcia , RavenX LLC (@DeadByDawn101)
 
 **Status:** DRAFT OUTLINE — June 4, 2026
 
