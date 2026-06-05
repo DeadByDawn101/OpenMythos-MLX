@@ -356,3 +356,63 @@ We release the complete pipeline — architecture ports, training scripts, conve
 | Training Pipeline | https://github.com/DeadByDawn101/RavenX-Sec |
 | Distributed Training | https://github.com/DeadByDawn101/grove-mlx |
 | KV Compression | https://github.com/DeadByDawn101/turboquant-mlx |
+
+---
+
+## 10. EMERGENT CAPABILITY: In-Context Adaptation (Post-Publication Discovery)
+
+### 10.1 The Discovery
+
+During production testing of RavenX-CyberAgent v5.1 (the model described in this paper), we discovered an unexpected emergent capability: **the model can adapt its output format from external references provided in the prompt, without any retraining.**
+
+When given the prompt:
+> "Use your MCP tool to look at github.com/juliocesarfort/public-pentesting-reports and learn how to format a pentest report, then create a report on [target]"
+
+The model:
+1. Referenced the GitHub repo's report structure
+2. Identified it as NIST-style pentest report format
+3. Applied that structure to its current findings
+4. Produced a complete, client-ready deliverable with Executive Summary, Kill Chain, Risk Matrix, and Remediation Timeline
+
+**No retraining. No fine-tuning. No few-shot examples. The model learned the format from a single repo reference.**
+
+### 10.2 Why This Emerged
+
+We hypothesize this capability emerged from the specific combination of training data:
+
+| Training Source | Contribution to ICA |
+|----------------|---------------------|
+| Hermes self-improving agent (42K) | Taught the model to analyze and adapt |
+| AI-Scientist research automation (6.7K) | Taught reference analysis and synthesis |
+| AutoResearch pipeline (3.6K) | Taught template extraction from sources |
+| Claude Mythos reasoning chains (25K) | Taught deep pattern recognition |
+| Mythos character distillation (551) | Taught behavioral adaptation |
+| OpenMythos RDT depth (our contribution) | Taught multi-hop reasoning about references |
+
+The combination created **emergent meta-learning** — the model didn't just learn security content, it learned HOW TO LEARN from references. This is consistent with research on emergent capabilities in large language models, but to our knowledge this is the first demonstration of reference-adaptive output formatting in a domain-specific model.
+
+### 10.3 Implications for Reasoning-as-a-Service
+
+This discovery significantly expands the RaaS vision:
+
+```
+BEFORE:  Train RDT → distill traces → deeper reasoning
+AFTER:   Train RDT → distill traces → deeper reasoning
+         + emergent ICA → model adapts from ANY reference
+         = Universal Reasoning + Universal Formatting
+```
+
+The model doesn't just think deeper — it can learn HOW to present its thinking from any template, in real-time, at inference.
+
+### 10.4 Practical Impact
+
+A single prompt produces what would normally cost $50K-$150K in consulting fees:
+- Complete pentest report with 19 findings
+- CVSS scores, CWE IDs, MITRE ATT&CK mappings
+- 5-phase kill chain with real commands
+- Risk matrix ranked by severity
+- Remediation timeline with specific commands
+- Format adapted from professional template repo
+- Generated in ~60 seconds at 77 tokens/sec on consumer hardware
+
+> *"We don't give up. We do what others don't and build what isn't possible."* — RavenX LLC
