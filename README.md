@@ -140,3 +140,11 @@ Only backpropagate through the **last loop iteration** — prevents gradient exp
 ## License
 
 MIT
+
+<!-- hypertribe:sponsors:start -->
+## Sponsors
+
+[![OpenMythos-MLX Sponsors](https://api.tribe.run/tokens/5nqvy4SjuAdbrsLNftp767fFeXn4zyNmuymzafyRKQro/sponsors.svg)](https://tribe.run/token/5nqvy4SjuAdbrsLNftp767fFeXn4zyNmuymzafyRKQro)
+
+Become a sponsor on [Tribe.run](https://tribe.run/token/5nqvy4SjuAdbrsLNftp767fFeXn4zyNmuymzafyRKQro).
+<!-- hypertribe:sponsors:end -->
